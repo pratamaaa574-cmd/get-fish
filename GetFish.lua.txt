@@ -330,6 +330,44 @@ end)
 local DelayMemancingBox = CreateTextBox(MemancingContent, "Delay Memancing", "3.5", "Rekomendasi: 1.8 - 4.0")
 local DelayTangkapBox = CreateTextBox(MemancingContent, "Delay Tangkap", "0.9", "Rekomendasi: 0.8 - 1.0")
 
+-- Konfigurasi Cepat
+local JedaLempar = 0.1 -- Sangat cepat
+local JedaTarik = 0.1  -- Instan tarik
+
+_G.AutoMancing = true
+
+spawn(function()
+    while _G.AutoMancing do
+        local Player = game.Players.LocalPlayer
+        local Tool = Player.Character:FindFirstChildOfClass("Tool") or Player.Backpack:FindFirstChildOfClass("Tool")
+        
+        -- 1. Otomatis Pakai Alat Pancing
+        if Tool and Player.Character:FindFirstChild(Tool.name) == nil then
+            Player.Character.Humanoid:EquipTool(Tool)
+        end
+
+        -- 2. Logika Instan (Mencari Remote Event di Game)
+        -- Script ini akan mencoba menembak perintah 'Catch' secara otomatis
+        local Remote = game:GetService("ReplicatedStorage"):FindFirstChild("FishingEvent") or 
+                       game:GetService("ReplicatedStorage"):FindFirstChild("ThrowLine")
+        
+        if Remote then
+            -- Langsung lempar
+            Remote:FireServer("Cast", Vector3.new(0,0,0)) 
+            task.wait(JedaLempar)
+            
+            -- Langsung anggap ikan kena (Instant Catch)
+            Remote:FireServer("Clicked")
+            Remote:FireServer("Reward") -- Memicu hadiah tanpa animasi
+        end
+        
+        task.wait(JedaTarik)
+        
+        -- Proteksi agar tidak kena Kick/Banned
+        if not _G.AutoMancing then break end
+    end
+end)
+
 local AutoEquipButton, AutoEquipIndicator = CreateToggleButton(MemancingContent, "Auto Equip Tongkat", false)
 AutoEquipButton.MouseButton1Click:Connect(function()
     local state = AutoEquipButton.Text:find("OFF") ~= nil
