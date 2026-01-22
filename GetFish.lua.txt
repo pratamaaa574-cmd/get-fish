@@ -1,0 +1,1711 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerScripts = LocalPlayer:WaitForChild("PlayerScripts")
+
+local ThemeColor = Color3.fromRGB(0, 255, 150)
+local SecondaryColor = Color3.fromRGB(20, 25, 20)
+local BackgroundColor = Color3.fromRGB(12, 15, 12)
+local AccentColor = Color3.fromRGB(25, 35, 25)
+
+local AkbarPanel = CoreGui:FindFirstChild("AkbarPanel")
+if AkbarPanel then
+    AkbarPanel:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "AkbarPanel"
+ScreenGui.Parent = CoreGui
+ScreenGui.ResetOnSpawn = false
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 700, 0, 500)
+MainFrame.Position = UDim2.new(0.5, -350, 0.5, -250)
+MainFrame.BackgroundColor3 = BackgroundColor
+MainFrame.Parent = ScreenGui
+MainFrame.ClipsDescendants = true
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = MainFrame
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Thickness = 2
+UIStroke.Color = ThemeColor
+UIStroke.Parent = MainFrame
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+ToggleButton.Position = UDim2.new(0, 15, 0.5, -25)
+ToggleButton.BackgroundColor3 = AccentColor
+ToggleButton.Font = Enum.Font.GothamBlack
+ToggleButton.TextColor3 = ThemeColor
+ToggleButton.Text = "AP"
+ToggleButton.TextSize = 24
+ToggleButton.Parent = ScreenGui
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(1, 0)
+ToggleCorner.Parent = ToggleButton
+
+local ToggleStroke = Instance.new("UIStroke")
+ToggleStroke.Thickness = 2
+ToggleStroke.Color = ThemeColor
+ToggleStroke.Parent = ToggleButton
+
+ToggleButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+    local tween = TweenService:Create(ToggleButton, TweenInfo.new(0.3), {Rotation = ToggleButton.Rotation + 180})
+    tween:Play()
+end)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.RightControl then
+        MainFrame.Visible = not MainFrame.Visible
+    end
+end)
+
+local Sidebar = Instance.new("Frame")
+Sidebar.Size = UDim2.new(0, 210, 1, 0)
+Sidebar.BackgroundColor3 = SecondaryColor
+Sidebar.Parent = MainFrame
+
+local SidebarCorner = Instance.new("UICorner")
+SidebarCorner.CornerRadius = UDim.new(0, 12)
+SidebarCorner.Parent = Sidebar
+
+local Title = Instance.new("TextLabel")
+Title.Font = Enum.Font.GothamBlack
+Title.BackgroundTransparency = 1
+Title.TextColor3 = ThemeColor
+Title.Parent = Sidebar
+Title.Text = "CHARLES"
+Title.TextSize = 20
+Title.Size = UDim2.new(1, 0, 0, 60)
+
+local ButtonContainer = Instance.new("ScrollingFrame")
+ButtonContainer.Position = UDim2.new(0, 10, 0, 70)
+ButtonContainer.Size = UDim2.new(1, -20, 1, -80)
+ButtonContainer.BackgroundTransparency = 1
+ButtonContainer.Parent = Sidebar
+
+local ButtonList = Instance.new("UIListLayout")
+ButtonList.Padding = UDim.new(0, 8)
+ButtonList.Parent = ButtonContainer
+
+local ContentArea = Instance.new("Frame")
+ContentArea.Position = UDim2.new(0, 220, 0, 15)
+ContentArea.Size = UDim2.new(1, -235, 1, -30)
+ContentArea.BackgroundTransparency = 1
+ContentArea.Parent = MainFrame
+
+local CurrentContent = nil
+
+local function CreateCategoryButton(name)
+    local button = Instance.new("TextButton")
+    button.Font = Enum.Font.GothamBold
+    button.TextColor3 = Color3.fromRGB(180, 180, 180)
+    button.Parent = ButtonContainer
+    button.Text = name
+    button.BackgroundColor3 = AccentColor
+    button.Size = UDim2.new(1, 0, 0, 42)
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = button
+    
+    local contentFrame = Instance.new("ScrollingFrame")
+    contentFrame.Visible = false
+    contentFrame.BackgroundTransparency = 1
+    contentFrame.Parent = ContentArea
+    contentFrame.ScrollBarThickness = 3
+    contentFrame.ScrollBarImageColor3 = ThemeColor
+    contentFrame.Size = UDim2.new(1, 0, 1, 0)
+    
+    local contentList = Instance.new("UIListLayout")
+    contentList.Padding = UDim.new(0, 12)
+    contentList.Parent = contentFrame
+    
+    button.MouseButton1Click:Connect(function()
+        if CurrentContent then
+            CurrentContent.Visible = false
+        end
+        
+        for _, child in pairs(ButtonContainer:GetChildren()) do
+            if child:IsA("TextButton") then
+                child.BackgroundColor3 = AccentColor
+                child.TextColor3 = Color3.fromRGB(180, 180, 180)
+            end
+        end
+        
+        contentFrame.Visible = true
+        button.BackgroundColor3 = ThemeColor
+        button.TextColor3 = Color3.fromRGB(255, 255, 255)
+        CurrentContent = contentFrame
+    end)
+    
+    return contentFrame
+end
+
+local function CreateSection(parent, title)
+    local section = Instance.new("Frame")
+    section.BackgroundColor3 = AccentColor
+    section.AutomaticSize = Enum.AutomaticSize.Y
+    section.Size = UDim2.new(1, -10, 0, 40)
+    section.Parent = parent
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 10)
+    corner.Parent = section
+    
+    local stroke = Instance.new("UIStroke")
+    stroke.Transparency = 0.6
+    stroke.Thickness = 1
+    stroke.Color = ThemeColor
+    stroke.Parent = section
+    
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Font = Enum.Font.GothamBold
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Position = UDim2.new(0, 12, 0, 6)
+    titleLabel.Parent = section
+    titleLabel.Text = title
+    titleLabel.TextColor3 = ThemeColor
+    titleLabel.Size = UDim2.new(1, -20, 0, 28)
+    
+    local container = Instance.new("Frame")
+    container.BackgroundTransparency = 1
+    container.Position = UDim2.new(0, 0, 0, 36)
+    container.Parent = section
+    container.AutomaticSize = Enum.AutomaticSize.Y
+    container.Size = UDim2.new(1, 0, 0, 0)
+    
+    local containerList = Instance.new("UIListLayout")
+    containerList.Padding = UDim.new(0, 8)
+    containerList.Parent = container
+    
+    local padding = Instance.new("UIPadding")
+    padding.PaddingBottom = UDim.new(0, 10)
+    padding.Parent = container
+    
+    return container
+end
+
+local function CreateToggleButton(parent, text, state)
+    local button = Instance.new("TextButton")
+    button.Font = Enum.Font.GothamSemibold
+    button.TextXAlignment = Enum.TextXAlignment.Left
+    button.TextColor3 = Color3.fromRGB(220, 220, 220)
+    button.Parent = parent
+    button.Text = "  " .. text .. ": " .. (state and "ON" or "OFF")
+    button.BackgroundColor3 = AccentColor
+    button.Size = UDim2.new(1, -15, 0, 45)
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = button
+    
+    local indicator = Instance.new("Frame")
+    indicator.Parent = button
+    indicator.BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    indicator.Position = UDim2.new(1, -35, 0.5, -10)
+    indicator.Size = UDim2.new(0, 20, 0, 20)
+    
+    local indicatorCorner = Instance.new("UICorner")
+    indicatorCorner.CornerRadius = UDim.new(1, 0)
+    indicatorCorner.Parent = indicator
+    
+    return button, indicator
+end
+
+local function CreateTextBox(parent, label, defaultValue, description)
+    local frame = Instance.new("Frame")
+    frame.BackgroundColor3 = AccentColor
+    frame.BackgroundTransparency = 1
+    frame.Size = UDim2.new(1, -15, 0, 70)
+    frame.Parent = parent
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = frame
+    
+    local labelText = Instance.new("TextLabel")
+    labelText.TextXAlignment = Enum.TextXAlignment.Left
+    labelText.Font = Enum.Font.GothamSemibold
+    labelText.BackgroundTransparency = 1
+    labelText.Position = UDim2.new(0, 5, 0, 0)
+    labelText.Parent = frame
+    labelText.Text = label
+    labelText.TextColor3 = Color3.fromRGB(255, 255, 255)
+    labelText.Size = UDim2.new(1, -10, 0, 20)
+    
+    local textBox = Instance.new("TextBox")
+    textBox.Font = Enum.Font.Gotham
+    textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textBox.Position = UDim2.new(0, 10, 0, 25)
+    textBox.Parent = frame
+    textBox.Text = tostring(defaultValue)
+    textBox.BackgroundColor3 = Color3.fromRGB(35, 45, 35)
+    textBox.Size = UDim2.new(1, -20, 0, 35)
+    
+    local textBoxCorner = Instance.new("UICorner")
+    textBoxCorner.CornerRadius = UDim.new(0, 6)
+    textBoxCorner.Parent = textBox
+    
+    if description then
+        local descText = Instance.new("TextLabel")
+        descText.TextColor3 = Color3.fromRGB(150, 150, 150)
+        descText.Parent = frame
+        descText.Text = description
+        descText.Font = Enum.Font.Gotham
+        descText.BackgroundTransparency = 1
+        descText.Position = UDim2.new(0, 5, 0, 60)
+        descText.TextXAlignment = Enum.TextXAlignment.Left
+        descText.TextSize = 11
+        descText.Size = UDim2.new(1, -10, 0, 15)
+    end
+    
+    return textBox
+end
+
+local function CreateSimpleButton(parent, text)
+    local button = Instance.new("TextButton")
+    button.Font = Enum.Font.GothamBold
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.Parent = parent
+    button.Text = text
+    button.BackgroundColor3 = AccentColor
+    button.Size = UDim2.new(1, -15, 0, 40)
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = button
+    
+    return button
+end
+
+local MemancingCategory = CreateCategoryButton("Memancing")
+local MemancingContent = CreateSection(MemancingCategory, "AUTO MEMANCING")
+
+local AutoMemancingButton, AutoMemancingIndicator = CreateToggleButton(MemancingContent, "Auto Memancing", false)
+AutoMemancingButton.MouseButton1Click:Connect(function()
+    local state = AutoMemancingButton.Text:find("OFF") ~= nil
+    AutoMemancingButton.Text = "  Auto Memancing: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(AutoMemancingIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        task.spawn(function()
+            while AutoMemancingButton.Text:find("ON") do
+                local character = LocalPlayer.Character
+                if character then
+                    local tool = character:FindFirstChildOfClass("Tool")
+                    if tool and tool.Name:match("ROD$") then
+                        local toolId = tool:GetAttribute("ToolUniqueId")
+                        if toolId then
+                            local fishingRemote = ReplicatedStorage:FindFirstChild("Fishing_RemoteThrow")
+                            if fishingRemote then
+                                fishingRemote:FireServer(0.444, toolId)
+                            end
+                        end
+                    end
+                end
+                task.wait(3.5)
+            end
+        end)
+    end
+end)
+
+local DelayMemancingBox = CreateTextBox(MemancingContent, "Delay Memancing", "3.5", "Rekomendasi: 1.8 - 4.0")
+local DelayTangkapBox = CreateTextBox(MemancingContent, "Delay Tangkap", "0.9", "Rekomendasi: 0.8 - 1.0")
+
+local AutoEquipButton, AutoEquipIndicator = CreateToggleButton(MemancingContent, "Auto Equip Tongkat", false)
+AutoEquipButton.MouseButton1Click:Connect(function()
+    local state = AutoEquipButton.Text:find("OFF") ~= nil
+    AutoEquipButton.Text = "  Auto Equip Tongkat: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(AutoEquipIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        task.spawn(function()
+            while AutoEquipButton.Text:find("ON") do
+                local character = LocalPlayer.Character
+                if character then
+                    local tool = character:FindFirstChildOfClass("Tool")
+                    if not tool or not tool.Name:upper():find("ROD") then
+                        for _, child in pairs(character:GetChildren()) do
+                            if child:IsA("Tool") and child.Name:upper():find("ROD") then
+                                character:EquipTool(child)
+                                break
+                            end
+                        end
+                    end
+                end
+                task.wait(1)
+            end
+        end)
+    end
+end)
+
+local GerakanCategory = CreateCategoryButton("Gerakan")
+local GerakanContent = CreateSection(GerakanCategory, "SURVIVAL")
+
+local OksigenButton, OksigenIndicator = CreateToggleButton(GerakanContent, "Oksigen Tak Terbatas", false)
+OksigenButton.MouseButton1Click:Connect(function()
+    local state = OksigenButton.Text:find("OFF") ~= nil
+    OksigenButton.Text = "  Oksigen Tak Terbatas: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(OksigenIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        local oxygenScript = PlayerScripts:FindFirstChild("OxygenSystem.client")
+        if oxygenScript then
+            oxygenScript.Disabled = true
+        end
+        
+        local underwaterBlur = Lighting:FindFirstChild("UnderwaterBlur")
+        if underwaterBlur then
+            underwaterBlur:Destroy()
+        end
+    end
+end)
+
+local BekukanButton, BekukanIndicator = CreateToggleButton(GerakanContent, "Bekukan Pemain", false)
+BekukanButton.MouseButton1Click:Connect(function()
+    local state = BekukanButton.Text:find("OFF") ~= nil
+    BekukanButton.Text = "  Bekukan Pemain: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(BekukanIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        local character = LocalPlayer.Character
+        if character then
+            local root = character:FindFirstChild("HumanoidRootPart")
+            if root then
+                local freezePos = root.CFrame
+                RunService.Stepped:Connect(function()
+                    local currentChar = LocalPlayer.Character
+                    if currentChar then
+                        local currentRoot = currentChar:FindFirstChild("HumanoidRootPart")
+                        if currentRoot then
+                            currentRoot.CFrame = freezePos
+                            currentRoot.Velocity = Vector3.zero
+                        end
+                    end
+                end)
+            end
+        end
+    end
+end)
+
+local TeleportCategory = CreateCategoryButton("Teleportasi")
+local TeleportContent = CreateSection(TeleportCategory, "ZONA")
+
+local locations = {
+    {"Skyler Zone", Vector3.new(-1497, 1033, 1544)},
+    {"Kinyis Isle", Vector3.new(103, 1021, -792)},
+    {"Majitos Zone", Vector3.new(2207, 1036, 27)},
+    {"Mira Nusa Isle", Vector3.new(-395, 1035, 281)},
+    {"Megalodon Zone", Vector3.new(-607, 1004, -1795)},
+    {"Tropical Isle", Vector3.new(-1877, 1025, -1571)},
+    {"Deep Sea 1", Vector3.new(1007, 1008, 1639)},
+    {"Deep Sea 2", Vector3.new(1193, 876, 2031)}
+}
+
+for _, location in pairs(locations) do
+    local button = CreateSimpleButton(TeleportContent, "Teleport ke " .. location[1])
+    button.MouseButton1Click:Connect(function()
+        local character = LocalPlayer.Character
+        if character then
+            local root = character:FindFirstChild("HumanoidRootPart")
+            if root then
+                root.CFrame = CFrame.new(location[2])
+            end
+        end
+    end)
+end
+
+local BatuCategory = CreateCategoryButton("Zona Batu")
+local BatuContent = CreateSection(BatuCategory, "LOKASI BATU")
+
+local stoneLocations = {
+    {"Zona Batu 1", Vector3.new(-195.7, 977.6, 1335.2)},
+    {"Zona Batu 2", Vector3.new(1370.1, 977.6, -794.4)},
+    {"Zona Batu 3", Vector3.new(-2547.4, 977.6, 363.6)},
+    {"Zona Batu 4", Vector3.new(-1699.2, 977.6, 876.3)},
+    {"Zona Batu 5", Vector3.new(-1032.4, 986.2, 280.5)},
+    {"Zona Batu 6", Vector3.new(-1636.3, 977.6, -716.7)},
+    {"Zona Batu 7", Vector3.new(-540.5, 977.6, -809.8)},
+    {"Zona Batu 8", Vector3.new(928.4, 985.7, 372.2)}
+}
+
+for _, location in pairs(stoneLocations) do
+    local button = CreateSimpleButton(BatuContent, "Teleport ke " .. location[1])
+    button.MouseButton1Click:Connect(function()
+        local character = LocalPlayer.Character
+        if character then
+            local root = character:FindFirstChild("HumanoidRootPart")
+            if root then
+                root.CFrame = CFrame.new(location[2])
+            end
+        end
+    end)
+end
+
+local FarmCategory = CreateCategoryButton("Farm")
+local FarmContent = CreateSection(FarmCategory, "AUTO JUAL")
+
+local AutoJualButton, AutoJualIndicator = CreateToggleButton(FarmContent, "Auto Jual Ikan", false)
+AutoJualButton.MouseButton1Click:Connect(function()
+    local state = AutoJualButton.Text:find("OFF") ~= nil
+    AutoJualButton.Text = "  Auto Jual Ikan: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(AutoJualIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        task.spawn(function()
+            while AutoJualButton.Text:find("ON") do
+                local economy = ReplicatedStorage:FindFirstChild("Economy")
+                if economy then
+                    local toServer = economy:FindFirstChild("ToServer")
+                    if toServer then
+                        local sellUnder = toServer:FindFirstChild("SellUnder")
+                        if sellUnder then
+                            sellUnder:FireServer(600)
+                        end
+                    end
+                end
+                task.wait(2)
+            end
+        end)
+    end
+end)
+
+local NilaiJualBox = CreateTextBox(FarmContent, "Nilai Jual Minimal", "600", "Jual ikan di bawah nilai ini")
+
+local FarmCacingContent = CreateSection(FarmCategory, "FARM CACING")
+
+local FarmCacingButton, FarmCacingIndicator = CreateToggleButton(FarmCacingContent, "Auto Farm Cacing", false)
+FarmCacingButton.MouseButton1Click:Connect(function()
+    local state = FarmCacingButton.Text:find("OFF") ~= nil
+    FarmCacingButton.Text = "  Auto Farm Cacing: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(FarmCacingIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        task.spawn(function()
+            local targetPos = Vector3.new(-1894, 1007, -1607)
+            
+            while FarmCacingButton.Text:find("ON") do
+                local character = LocalPlayer.Character
+                if character then
+                    local root = character:FindFirstChild("HumanoidRootPart")
+                    if root then
+                        root.CFrame = CFrame.new(targetPos)
+                        task.wait(0.5)
+                        
+                        for _, item in pairs(workspace:GetChildren()) do
+                            if item:IsA("BasePart") and item.Name:upper():find("CACING") then
+                                root.CFrame = item.CFrame * CFrame.new(0, 3, 0)
+                                task.wait(0.3)
+                                
+                                local prompt = item:FindFirstChildOfClass("ProximityPrompt")
+                                if prompt then
+                                    fireproximityprompt(prompt)
+                                    task.wait(2)
+                                end
+                            end
+                        end
+                    end
+                end
+                task.wait(1)
+            end
+        end)
+    end
+end)
+
+local TokoCategory = CreateCategoryButton("Toko")
+local PotionContent = CreateSection(TokoCategory, "POTION")
+
+local PotionTypeButton = Instance.new("TextButton")
+PotionTypeButton.Font = Enum.Font.GothamSemibold
+PotionTypeButton.TextXAlignment = Enum.TextXAlignment.Left
+PotionTypeButton.TextColor3 = Color3.fromRGB(220, 220, 220)
+PotionTypeButton.Parent = PotionContent
+PotionTypeButton.Text = "Pilih Potion: EXTREME_POTION"
+PotionTypeButton.BackgroundColor3 = AccentColor
+PotionTypeButton.Size = UDim2.new(1, -15, 0, 45)
+
+local PotionCorner = Instance.new("UICorner")
+PotionCorner.CornerRadius = UDim.new(0, 8)
+PotionCorner.Parent = PotionTypeButton
+
+local potionTypes = {"EXTREME_POTION", "SMALL_POTION"}
+local currentPotion = 1
+
+PotionTypeButton.MouseButton1Click:Connect(function()
+    currentPotion = currentPotion % #potionTypes + 1
+    PotionTypeButton.Text = "Pilih Potion: " .. potionTypes[currentPotion]
+end)
+
+local PotionDelayBox = CreateTextBox(PotionContent, "Delay Beli Potion", "2", "Detik (contoh: 2.5)")
+
+local AutoPotionButton, AutoPotionIndicator = CreateToggleButton(PotionContent, "Auto Beli Potion", false)
+AutoPotionButton.MouseButton1Click:Connect(function()
+    local state = AutoPotionButton.Text:find("OFF") ~= nil
+    AutoPotionButton.Text = "  Auto Beli Potion: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(AutoPotionIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        task.spawn(function()
+            while AutoPotionButton.Text:find("ON") do
+                local potionSystem = ReplicatedStorage:FindFirstChild("Potion")
+                if potionSystem then
+                    local toServer = potionSystem:FindFirstChild("ToServer")
+                    if toServer then
+                        local purchase = toServer:FindFirstChild("PurchasePotion")
+                        if purchase then
+                            purchase:FireServer(potionTypes[currentPotion])
+                        end
+                    end
+                end
+                task.wait(tonumber(PotionDelayBox.Text) or 2)
+            end
+        end)
+    end
+end)
+
+local SkinContent = CreateSection(TokoCategory, "SKIN TONGKAT")
+
+local SkinTypeButton = Instance.new("TextButton")
+SkinTypeButton.Font = Enum.Font.GothamSemibold
+SkinTypeButton.TextXAlignment = Enum.TextXAlignment.Left
+SkinTypeButton.TextColor3 = Color3.fromRGB(220, 220, 220)
+SkinTypeButton.Parent = SkinContent
+SkinTypeButton.Text = "Pilih Skin: SKINCF_FAIRY_SPARK"
+SkinTypeButton.BackgroundColor3 = AccentColor
+SkinTypeButton.Size = UDim2.new(1, -15, 0, 45)
+
+local SkinCorner = Instance.new("UICorner")
+SkinCorner.CornerRadius = UDim.new(0, 8)
+SkinCorner.Parent = SkinTypeButton
+
+local skinTypes = {"SKINCF_FAIRY_SPARK", "SKINCF_SAMURAI_LIGHTNING"}
+local currentSkin = 1
+
+SkinTypeButton.MouseButton1Click:Connect(function()
+    currentSkin = currentSkin % #skinTypes + 1
+    SkinTypeButton.Text = "Pilih Skin: " .. skinTypes[currentSkin]
+end)
+
+local AutoSkinButton, AutoSkinIndicator = CreateToggleButton(SkinContent, "Auto Beli Skin", false)
+AutoSkinButton.MouseButton1Click:Connect(function()
+    local state = AutoSkinButton.Text:find("OFF") ~= nil
+    AutoSkinButton.Text = "  Auto Beli Skin: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(AutoSkinIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        task.spawn(function()
+            while AutoSkinButton.Text:find("ON") do
+                local rodSkin = ReplicatedStorage:FindFirstChild("RodSkin")
+                if rodSkin then
+                    local toServer = rodSkin:FindFirstChild("ToServer")
+                    if toServer then
+                        local purchase = toServer:FindFirstChild("PurchaseSkinCF")
+                        if purchase then
+                            purchase:FireServer(skinTypes[currentSkin])
+                        end
+                    end
+                end
+                task.wait(3)
+            end
+        end)
+    end
+end)
+
+local TongkatContent = CreateSection(TokoCategory, "TONGKAT PANCING")
+
+local TongkatTypeButton = Instance.new("TextButton")
+TongkatTypeButton.Font = Enum.Font.GothamSemibold
+TongkatTypeButton.TextXAlignment = Enum.TextXAlignment.Left
+TongkatTypeButton.TextColor3 = Color3.fromRGB(220, 220, 220)
+TongkatTypeButton.Parent = TongkatContent
+TongkatTypeButton.Text = "Pilih Tongkat: PINKYS"
+TongkatTypeButton.BackgroundColor3 = AccentColor
+TongkatTypeButton.Size = UDim2.new(1, -15, 0, 45)
+
+local TongkatCorner = Instance.new("UICorner")
+TongkatCorner.CornerRadius = UDim.new(0, 8)
+TongkatCorner.Parent = TongkatTypeButton
+
+local rodTypes = {"PINKYS", "SAMURAI"}
+local currentRod = 1
+
+TongkatTypeButton.MouseButton1Click:Connect(function()
+    currentRod = currentRod % #rodTypes + 1
+    TongkatTypeButton.Text = "Pilih Tongkat: " .. rodTypes[currentRod]
+end)
+
+local AutoTongkatButton, AutoTongkatIndicator = CreateToggleButton(TongkatContent, "Auto Beli Tongkat", false)
+AutoTongkatButton.MouseButton1Click:Connect(function()
+    local state = AutoTongkatButton.Text:find("OFF") ~= nil
+    AutoTongkatButton.Text = "  Auto Beli Tongkat: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(AutoTongkatIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        task.spawn(function()
+            while AutoTongkatButton.Text:find("ON") do
+                local rodShop = ReplicatedStorage:FindFirstChild("RodShop")
+                if rodShop then
+                    local toServer = rodShop:FindFirstChild("ToServer")
+                    if toServer then
+                        local purchase = toServer:FindFirstChild("PurchaseRod")
+                        if purchase then
+                            purchase:FireServer(rodTypes[currentRod])
+                        end
+                    end
+                end
+                task.wait(3)
+            end
+        end)
+    end
+end)
+
+local BobberContent = CreateSection(TokoCategory, "BOBBER")
+
+local BobberTypeButton = Instance.new("TextButton")
+BobberTypeButton.Font = Enum.Font.GothamSemibold
+BobberTypeButton.TextXAlignment = Enum.TextXAlignment.Left
+BobberTypeButton.TextColor3 = Color3.fromRGB(220, 220, 220)
+BobberTypeButton.Parent = BobberContent
+BobberTypeButton.Text = "Pilih Bobber: BOBBER_ROYAL"
+BobberTypeButton.BackgroundColor3 = AccentColor
+BobberTypeButton.Size = UDim2.new(1, -15, 0, 45)
+
+local BobberCorner = Instance.new("UICorner")
+BobberCorner.CornerRadius = UDim.new(0, 8)
+BobberCorner.Parent = BobberTypeButton
+
+local bobberTypes = {"BOBBER_ROYAL", "BOBBER_STARTER"}
+local currentBobber = 1
+
+BobberTypeButton.MouseButton1Click:Connect(function()
+    currentBobber = currentBobber % #bobberTypes + 1
+    BobberTypeButton.Text = "Pilih Bobber: " .. bobberTypes[currentBobber]
+end)
+
+local AutoBobberButton, AutoBobberIndicator = CreateToggleButton(BobberContent, "Auto Beli Bobber", false)
+AutoBobberButton.MouseButton1Click:Connect(function()
+    local state = AutoBobberButton.Text:find("OFF") ~= nil
+    AutoBobberButton.Text = "  Auto Beli Bobber: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(AutoBobberIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        task.spawn(function()
+            while AutoBobberButton.Text:find("ON") do
+                local bobberShop = ReplicatedStorage:FindFirstChild("BobberShop")
+                if bobberShop then
+                    local toServer = bobberShop:FindFirstChild("ToServer")
+                    if toServer then
+                        local purchase = toServer:FindFirstChild("BuyBobber")
+                        if purchase then
+                            purchase:FireServer(bobberTypes[currentBobber])
+                        end
+                    end
+                end
+                task.wait(3)
+            end
+        end)
+    end
+end)
+
+task.spawn(function()
+    task.wait(0.5)
+    for _, child in pairs(ButtonContainer:GetChildren()) do
+        if child:IsA("TextButton") then
+            child.MouseButton1Click:Fire()
+            break
+        end
+    end
+end)
+
+LocalPlayer.CharacterAdded:Connect(function()
+    if AutoEquipButton and AutoEquipButton.Text:find("ON") then
+        task.wait(1)
+        AutoEquipButton.MouseButton1Click:Fire()
+    end
+end)
+
+MainFrame.Visible = false
+
+local function CreateDropdown(parent, text, options, defaultIndex)
+    local button = Instance.new("TextButton")
+    button.Font = Enum.Font.GothamSemibold
+    button.TextXAlignment = Enum.TextXAlignment.Left
+    button.TextColor3 = Color3.fromRGB(220, 220, 220)
+    button.Parent = parent
+    button.Text = text .. ": " .. options[defaultIndex]
+    button.BackgroundColor3 = AccentColor
+    button.Size = UDim2.new(1, -15, 0, 45)
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = button
+    
+    local currentIndex = defaultIndex
+    
+    button.MouseButton1Click:Connect(function()
+        currentIndex = currentIndex % #options + 1
+        button.Text = text .. ": " .. options[currentIndex]
+    end)
+    
+    return button, function() return options[currentIndex] end
+end
+
+local MiscCategory = CreateCategoryButton("Misc")
+local MiscContent = CreateSection(MiscCategory, "PENGATURAN")
+
+local QualityButton, GetQuality = CreateDropdown(MiscContent, "Kualitas Grafik", {"LOW", "MEDIUM", "HIGH", "ULTRA"}, 3)
+local FPSButton, GetFPS = CreateDropdown(MiscContent, "Limit FPS", {"30", "60", "120", "240", "UNLIMITED"}, 4)
+
+local PerformanceButton, PerformanceIndicator = CreateToggleButton(MiscContent, "Mode Performa", false)
+PerformanceButton.MouseButton1Click:Connect(function()
+    local state = PerformanceButton.Text:find("OFF") ~= nil
+    PerformanceButton.Text = "  Mode Performa: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(PerformanceIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        settings().Rendering.QualityLevel = 1
+        for _, effect in pairs(Lighting:GetChildren()) do
+            if effect:IsA("PostEffect") or effect:IsA("BlurEffect") or effect:IsA("SunRaysEffect") then
+                effect.Enabled = false
+            end
+        end
+    else
+        settings().Rendering.QualityLevel = 21
+    end
+end)
+
+local NoFogButton, NoFogIndicator = CreateToggleButton(MiscContent, "Hilangkan Kabut", false)
+NoFogButton.MouseButton1Click:Connect(function()
+    local state = NoFogButton.Text:find("OFF") ~= nil
+    NoFogButton.Text = "  Hilangkan Kabut: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(NoFogIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        Lighting.FogEnd = 1000000
+        Lighting.FogStart = 999999
+    else
+        Lighting.FogEnd = 10000
+        Lighting.FogStart = 0
+    end
+end)
+
+local AutoCategory = CreateCategoryButton("Otomatis")
+local AutoContent = CreateSection(AutoCategory, "AUTO COLLECT")
+
+local AutoCollectButton, AutoCollectIndicator = CreateToggleButton(AutoContent, "Auto Collect Item", false)
+AutoCollectButton.MouseButton1Click:Connect(function()
+    local state = AutoCollectButton.Text:find("OFF") ~= nil
+    AutoCollectButton.Text = "  Auto Collect Item: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(AutoCollectIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        task.spawn(function()
+            while AutoCollectButton.Text:find("ON") do
+                for _, item in pairs(workspace:GetChildren()) do
+                    if item:IsA("BasePart") and item.Name:find("Drop") then
+                        local character = LocalPlayer.Character
+                        if character then
+                            local root = character:FindFirstChild("HumanoidRootPart")
+                            if root then
+                                local distance = (root.Position - item.Position).Magnitude
+                                if distance < 50 then
+                                    root.CFrame = CFrame.new(item.Position + Vector3.new(0, 3, 0))
+                                    task.wait(0.2)
+                                    
+                                    local prompt = item:FindFirstChildOfClass("ProximityPrompt")
+                                    if prompt then
+                                        fireproximityprompt(prompt)
+                                        task.wait(0.5)
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                task.wait(1)
+            end
+        end)
+    end
+end)
+
+local CollectRangeBox = CreateTextBox(AutoContent, "Jarak Collect", "50", "Dalam studs")
+
+local AutoRebirthButton, AutoRebirthIndicator = CreateToggleButton(AutoContent, "Auto Rebirth", false)
+AutoRebirthButton.MouseButton1Click:Connect(function()
+    local state = AutoRebirthButton.Text:find("OFF") ~= nil
+    AutoRebirthButton.Text = "  Auto Rebirth: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(AutoRebirthIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        task.spawn(function()
+            while AutoRebirthButton.Text:find("ON") do
+                local rebirthRemote = ReplicatedStorage:FindFirstChild("Rebirth")
+                if rebirthRemote then
+                    rebirthRemote:FireServer()
+                end
+                task.wait(5)
+            end
+        end)
+    end
+end)
+
+local PlayerCategory = CreateCategoryButton("Player")
+local PlayerContent = CreateSection(PlayerCategory, "PLAYER MODS")
+
+local SpeedButton, SpeedIndicator = CreateToggleButton(PlayerContent, "Speed Hack", false)
+SpeedButton.MouseButton1Click:Connect(function()
+    local state = SpeedButton.Text:find("OFF") ~= nil
+    SpeedButton.Text = "  Speed Hack: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(SpeedIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        local connection
+        connection = RunService.Stepped:Connect(function()
+            local character = LocalPlayer.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.WalkSpeed = 50
+                end
+            end
+        end)
+        
+        SpeedButton:GetPropertyChangedSignal("Text"):Connect(function()
+            if SpeedButton.Text:find("OFF") then
+                connection:Disconnect()
+                local character = LocalPlayer.Character
+                if character then
+                    local humanoid = character:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        humanoid.WalkSpeed = 16
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+local JumpButton, JumpIndicator = CreateToggleButton(PlayerContent, "Jump Hack", false)
+JumpButton.MouseButton1Click:Connect(function()
+    local state = JumpButton.Text:find("OFF") ~= nil
+    JumpButton.Text = "  Jump Hack: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(JumpIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        local connection
+        connection = RunService.Stepped:Connect(function()
+            local character = LocalPlayer.Character
+            if character then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid.JumpPower = 100
+                end
+            end
+        end)
+        
+        JumpButton:GetPropertyChangedSignal("Text"):Connect(function()
+            if JumpButton.Text:find("OFF") then
+                connection:Disconnect()
+                local character = LocalPlayer.Character
+                if character then
+                    local humanoid = character:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        humanoid.JumpPower = 50
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+local NoclipButton, NoclipIndicator = CreateToggleButton(PlayerContent, "No Clip", false)
+NoclipButton.MouseButton1Click:Connect(function()
+    local state = NoclipButton.Text:find("OFF") ~= nil
+    NoclipButton.Text = "  No Clip: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(NoclipIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        local connection
+        connection = RunService.Stepped:Connect(function()
+            local character = LocalPlayer.Character
+            if character then
+                for _, part in pairs(character:GetChildren()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+        
+        NoclipButton:GetPropertyChangedSignal("Text"):Connect(function()
+            if NoclipButton.Text:find("OFF") then
+                connection:Disconnect()
+                local character = LocalPlayer.Character
+                if character then
+                    for _, part in pairs(character:GetChildren()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = true
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+local FlyButton, FlyIndicator = CreateToggleButton(PlayerContent, "Fly", false)
+FlyButton.MouseButton1Click:Connect(function()
+    local state = FlyButton.Text:find("OFF") ~= nil
+    FlyButton.Text = "  Fly: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(FlyIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        local flySpeed = 50
+        local flying = false
+        local bodyVelocity
+        
+        local function startFly()
+            local character = LocalPlayer.Character
+            if character then
+                local root = character:FindFirstChild("HumanoidRootPart")
+                if root then
+                    flying = true
+                    
+                    bodyVelocity = Instance.new("BodyVelocity")
+                    bodyVelocity.Velocity = Vector3.new(0, 0, 0)
+                    bodyVelocity.MaxForce = Vector3.new(4000, 4000, 4000)
+                    bodyVelocity.P = 1250
+                    bodyVelocity.Parent = root
+                    
+                    local humanoid = character:FindFirstChildOfClass("Humanoid")
+                    if humanoid then
+                        humanoid.PlatformStand = true
+                    end
+                    
+                    local connection
+                    connection = UserInputService.InputBegan:Connect(function(input)
+                        if input.KeyCode == Enum.KeyCode.Space then
+                            bodyVelocity.Velocity = Vector3.new(bodyVelocity.Velocity.X, flySpeed, bodyVelocity.Velocity.Z)
+                        elseif input.KeyCode == Enum.KeyCode.LeftShift then
+                            bodyVelocity.Velocity = Vector3.new(bodyVelocity.Velocity.X, -flySpeed, bodyVelocity.Velocity.Z)
+                        elseif input.KeyCode == Enum.KeyCode.W then
+                            bodyVelocity.Velocity = Vector3.new(root.CFrame.LookVector.X * flySpeed, bodyVelocity.Velocity.Y, root.CFrame.LookVector.Z * flySpeed)
+                        elseif input.KeyCode == Enum.KeyCode.S then
+                            bodyVelocity.Velocity = Vector3.new(-root.CFrame.LookVector.X * flySpeed, bodyVelocity.Velocity.Y, -root.CFrame.LookVector.Z * flySpeed)
+                        elseif input.KeyCode == Enum.KeyCode.A then
+                            bodyVelocity.Velocity = Vector3.new(-root.CFrame.RightVector.X * flySpeed, bodyVelocity.Velocity.Y, -root.CFrame.RightVector.Z * flySpeed)
+                        elseif input.KeyCode == Enum.KeyCode.D then
+                            bodyVelocity.Velocity = Vector3.new(root.CFrame.RightVector.X * flySpeed, bodyVelocity.Velocity.Y, root.CFrame.RightVector.Z * flySpeed)
+                        end
+                    end)
+                    
+                    local connection2
+                    connection2 = UserInputService.InputEnded:Connect(function(input)
+                        if input.KeyCode == Enum.KeyCode.Space or input.KeyCode == Enum.KeyCode.LeftShift then
+                            bodyVelocity.Velocity = Vector3.new(bodyVelocity.Velocity.X, 0, bodyVelocity.Velocity.Z)
+                        elseif input.KeyCode == Enum.KeyCode.W or input.KeyCode == Enum.KeyCode.S then
+                            bodyVelocity.Velocity = Vector3.new(0, bodyVelocity.Velocity.Y, 0)
+                        elseif input.KeyCode == Enum.KeyCode.A or input.KeyCode == Enum.KeyCode.D then
+                            bodyVelocity.Velocity = Vector3.new(0, bodyVelocity.Velocity.Y, bodyVelocity.Velocity.Z)
+                        end
+                    end)
+                    
+                    FlyButton:GetPropertyChangedSignal("Text"):Connect(function()
+                        if FlyButton.Text:find("OFF") then
+                            flying = false
+                            if bodyVelocity then
+                                bodyVelocity:Destroy()
+                            end
+                            connection:Disconnect()
+                            connection2:Disconnect()
+                            
+                            local character = LocalPlayer.Character
+                            if character then
+                                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                                if humanoid then
+                                    humanoid.PlatformStand = false
+                                end
+                            end
+                        end
+                    end)
+                end
+            end
+        end
+        
+        startFly()
+    end
+end)
+
+local FlySpeedBox = CreateTextBox(PlayerContent, "Kecepatan Fly", "50", "1-100")
+
+local EspCategory = CreateCategoryButton("ESP")
+local EspContent = CreateSection(EspCategory, "ESP SETTINGS")
+
+local PlayerEspButton, PlayerEspIndicator = CreateToggleButton(EspContent, "Player ESP", false)
+PlayerEspButton.MouseButton1Click:Connect(function()
+    local state = PlayerEspButton.Text:find("OFF") ~= nil
+    PlayerEspButton.Text = "  Player ESP: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(PlayerEspIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        local boxes = {}
+        
+        local function createEsp(player)
+            if player ~= LocalPlayer then
+                local box = Instance.new("BoxHandleAdornment")
+                box.Name = player.Name .. "_ESP"
+                box.Adornee = nil
+                box.AlwaysOnTop = true
+                box.ZIndex = 10
+                box.Size = Vector3.new(4, 6, 4)
+                box.Color3 = Color3.fromRGB(255, 0, 0)
+                box.Transparency = 0.5
+                box.Parent = CoreGui
+                
+                boxes[player] = box
+                
+                local function updateEsp()
+                    local character = player.Character
+                    if character then
+                        local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                        if humanoidRootPart then
+                            box.Adornee = humanoidRootPart
+                            box.Visible = true
+                        else
+                            box.Visible = false
+                        end
+                    else
+                        box.Visible = false
+                    end
+                end
+                
+                local connection
+                connection = RunService.Heartbeat:Connect(updateEsp)
+                
+                player:GetPropertyChangedSignal("Character"):Connect(updateEsp)
+            end
+        end
+        
+        for _, player in pairs(Players:GetPlayers()) do
+            createEsp(player)
+        end
+        
+        local addedConnection
+        addedConnection = Players.PlayerAdded:Connect(createEsp)
+        
+        local removedConnection
+        removedConnection = Players.PlayerRemoving:Connect(function(player)
+            if boxes[player] then
+                boxes[player]:Destroy()
+                boxes[player] = nil
+            end
+        end)
+        
+        PlayerEspButton:GetPropertyChangedSignal("Text"):Connect(function()
+            if PlayerEspButton.Text:find("OFF") then
+                for _, box in pairs(boxes) do
+                    box:Destroy()
+                end
+                boxes = {}
+                if addedConnection then
+                    addedConnection:Disconnect()
+                end
+                if removedConnection then
+                    removedConnection:Disconnect()
+                end
+            end
+        end)
+    end
+end)
+
+local ItemEspButton, ItemEspIndicator = CreateToggleButton(EspContent, "Item ESP", false)
+ItemEspButton.MouseButton1Click:Connect(function()
+    local state = ItemEspButton.Text:find("OFF") ~= nil
+    ItemEspButton.Text = "  Item ESP: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(ItemEspIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        local highlights = {}
+        local itemNames = {"CACING", "Drop", "Coin", "Gem", "Treasure"}
+        
+        local function highlightItem(item)
+            if item:IsA("BasePart") then
+                for _, name in pairs(itemNames) do
+                    if item.Name:upper():find(name:upper()) then
+                        local highlight = Instance.new("Highlight")
+                        highlight.Name = item.Name .. "_ESP"
+                        highlight.Adornee = item
+                        highlight.FillColor = Color3.fromRGB(0, 255, 0)
+                        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                        highlight.FillTransparency = 0.5
+                        highlight.OutlineTransparency = 0
+                        highlight.Parent = CoreGui
+                        
+                        highlights[item] = highlight
+                        break
+                    end
+                end
+            end
+        end
+        
+        for _, item in pairs(workspace:GetChildren()) do
+            highlightItem(item)
+        end
+        
+        local addedConnection
+        addedConnection = workspace.ChildAdded:Connect(highlightItem)
+        
+        local removedConnection
+        removedConnection = workspace.ChildRemoved:Connect(function(child)
+            if highlights[child] then
+                highlights[child]:Destroy()
+                highlights[child] = nil
+            end
+        end)
+        
+        ItemEspButton:GetPropertyChangedSignal("Text"):Connect(function()
+            if ItemEspButton.Text:find("OFF") then
+                for _, highlight in pairs(highlights) do
+                    highlight:Destroy()
+                end
+                highlights = {}
+                if addedConnection then
+                    addedConnection:Disconnect()
+                end
+                if removedConnection then
+                    removedConnection:Disconnect()
+                end
+            end
+        end)
+    end
+end)
+
+local TracerButton, TracerIndicator = CreateToggleButton(EspContent, "Tracer Lines", false)
+TracerButton.MouseButton1Click:Connect(function()
+    local state = TracerButton.Text:find("OFF") ~= nil
+    TracerButton.Text = "  Tracer Lines: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(TracerIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        local tracers = {}
+        
+        local function createTracer(player)
+            if player ~= LocalPlayer then
+                local line = Instance.new("LineHandleAdornment")
+                line.Name = player.Name .. "_TRACER"
+                line.Thickness = 2
+                line.Color3 = Color3.fromRGB(255, 255, 0)
+                line.Transparency = 0.7
+                line.ZIndex = 5
+                line.Parent = CoreGui
+                
+                tracers[player] = line
+                
+                local function updateTracer()
+                    local character = player.Character
+                    local myCharacter = LocalPlayer.Character
+                    
+                    if character and myCharacter then
+                        local targetRoot = character:FindFirstChild("HumanoidRootPart")
+                        local myRoot = myCharacter:FindFirstChild("HumanoidRootPart")
+                        
+                        if targetRoot and myRoot then
+                            line.Visible = true
+                            line.Adornee = myRoot
+                            line.Length = (targetRoot.Position - myRoot.Position).Magnitude
+                            line.CFrame = CFrame.new(myRoot.Position, targetRoot.Position)
+                        else
+                            line.Visible = false
+                        end
+                    else
+                        line.Visible = false
+                    end
+                end
+                
+                local connection
+                connection = RunService.Heartbeat:Connect(updateTracer)
+            end
+        end
+        
+        for _, player in pairs(Players:GetPlayers()) do
+            createTracer(player)
+        end
+        
+        local addedConnection
+        addedConnection = Players.PlayerAdded:Connect(createTracer)
+        
+        local removedConnection
+        removedConnection = Players.PlayerRemoving:Connect(function(player)
+            if tracers[player] then
+                tracers[player]:Destroy()
+                tracers[player] = nil
+            end
+        end)
+        
+        TracerButton:GetPropertyChangedSignal("Text"):Connect(function()
+            if TracerButton.Text:find("OFF") then
+                for _, tracer in pairs(tracers) do
+                    tracer:Destroy()
+                end
+                tracers = {}
+                if addedConnection then
+                    addedConnection:Disconnect()
+                end
+                if removedConnection then
+                    removedConnection:Disconnect()
+                end
+            end
+        end)
+    end
+end)
+
+local NameTagsButton, NameTagsIndicator = CreateToggleButton(EspContent, "Name Tags", false)
+NameTagsButton.MouseButton1Click:Connect(function()
+    local state = NameTagsButton.Text:find("OFF") ~= nil
+    NameTagsButton.Text = "  Name Tags: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(NameTagsIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        local billboards = {}
+        
+        local function createNameTag(player)
+            if player ~= LocalPlayer then
+                local billboard = Instance.new("BillboardGui")
+                billboard.Name = player.Name .. "_NAMETAG"
+                billboard.Size = UDim2.new(0, 200, 0, 50)
+                billboard.AlwaysOnTop = true
+                billboard.MaxDistance = 1000
+                billboard.Parent = CoreGui
+                
+                local frame = Instance.new("Frame")
+                frame.BackgroundTransparency = 1
+                frame.Size = UDim2.new(1, 0, 1, 0)
+                frame.Parent = billboard
+                
+                local nameLabel = Instance.new("TextLabel")
+                nameLabel.Text = player.Name
+                nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+                nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+                nameLabel.TextStrokeTransparency = 0
+                nameLabel.BackgroundTransparency = 1
+                nameLabel.Size = UDim2.new(1, 0, 0.5, 0)
+                nameLabel.Font = Enum.Font.GothamBold
+                nameLabel.TextSize = 14
+                nameLabel.Parent = frame
+                
+                local distanceLabel = Instance.new("TextLabel")
+                distanceLabel.Text = "0 studs"
+                distanceLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+                distanceLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+                distanceLabel.TextStrokeTransparency = 0
+                distanceLabel.BackgroundTransparency = 1
+                distanceLabel.Size = UDim2.new(1, 0, 0.5, 0)
+                distanceLabel.Position = UDim2.new(0, 0, 0.5, 0)
+                distanceLabel.Font = Enum.Font.Gotham
+                distanceLabel.TextSize = 12
+                distanceLabel.Parent = frame
+                
+                billboards[player] = billboard
+                
+                local function updateNameTag()
+                    local character = player.Character
+                    local myCharacter = LocalPlayer.Character
+                    
+                    if character and myCharacter then
+                        local head = character:FindFirstChild("Head")
+                        local myRoot = myCharacter:FindFirstChild("HumanoidRootPart")
+                        local targetRoot = character:FindFirstChild("HumanoidRootPart")
+                        
+                        if head and myRoot and targetRoot then
+                            billboard.Adornee = head
+                            billboard.Enabled = true
+                            
+                            local distance = (myRoot.Position - targetRoot.Position).Magnitude
+                            distanceLabel.Text = math.floor(distance) .. " studs"
+                        else
+                            billboard.Enabled = false
+                        end
+                    else
+                        billboard.Enabled = false
+                    end
+                end
+                
+                local connection
+                connection = RunService.Heartbeat:Connect(updateNameTag)
+                
+                player:GetPropertyChangedSignal("Character"):Connect(updateNameTag)
+            end
+        end
+        
+        for _, player in pairs(Players:GetPlayers()) do
+            createNameTag(player)
+        end
+        
+        local addedConnection
+        addedConnection = Players.PlayerAdded:Connect(createNameTag)
+        
+        local removedConnection
+        removedConnection = Players.PlayerRemoving:Connect(function(player)
+            if billboards[player] then
+                billboards[player]:Destroy()
+                billboards[player] = nil
+            end
+        end)
+        
+        NameTagsButton:GetPropertyChangedSignal("Text"):Connect(function()
+            if NameTagsButton.Text:find("OFF") then
+                for _, billboard in pairs(billboards) do
+                    billboard:Destroy()
+                end
+                billboards = {}
+                if addedConnection then
+                    addedConnection:Disconnect()
+                end
+                if removedConnection then
+                    removedConnection:Disconnect()
+                end
+            end
+        end)
+    end
+end)
+
+local CombatCategory = CreateCategoryButton("Combat")
+local CombatContent = CreateSection(CombatCategory, "AUTO ATTACK")
+
+local AutoAttackButton, AutoAttackIndicator = CreateToggleButton(CombatContent, "Auto Attack Mob", false)
+AutoAttackButton.MouseButton1Click:Connect(function()
+    local state = AutoAttackButton.Text:find("OFF") ~= nil
+    AutoAttackButton.Text = "  Auto Attack Mob: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(AutoAttackIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        task.spawn(function()
+            while AutoAttackButton.Text:find("ON") do
+                local character = LocalPlayer.Character
+                if character then
+                    local target = nil
+                    local closestDistance = math.huge
+                    
+                    for _, mob in pairs(workspace:GetChildren()) do
+                        if mob:IsA("Model") and mob.Name:find("Shark") then
+                            local root = mob:FindFirstChild("HumanoidRootPart")
+                            if root then
+                                local myRoot = character:FindFirstChild("HumanoidRootPart")
+                                if myRoot then
+                                    local distance = (myRoot.Position - root.Position).Magnitude
+                                    if distance < closestDistance and distance < 100 then
+                                        closestDistance = distance
+                                        target = mob
+                                    end
+                                end
+                            end
+                        end
+                    end
+                    
+                    if target then
+                        local root = target:FindFirstChild("HumanoidRootPart")
+                        local myRoot = character:FindFirstChild("HumanoidRootPart")
+                        
+                        if root and myRoot then
+                            myRoot.CFrame = CFrame.new(root.Position + Vector3.new(0, 5, 0))
+                            
+                            local tool = character:FindFirstChildOfClass("Tool")
+                            if tool then
+                                local remote = tool:FindFirstChildOfClass("RemoteEvent")
+                                if remote then
+                                    remote:FireServer("Attack", target)
+                                end
+                            end
+                        end
+                    end
+                end
+                task.wait(0.5)
+            end
+        end)
+    end
+end)
+
+local AttackRangeBox = CreateTextBox(CombatContent, "Jarak Attack", "100", "Dalam studs")
+
+local AimbotButton, AimbotIndicator = CreateToggleButton(CombatContent, "Aimbot", false)
+AimbotButton.MouseButton1Click:Connect(function()
+    local state = AimbotButton.Text:find("OFF") ~= nil
+    AimbotButton.Text = "  Aimbot: " .. (state and "ON" or "OFF")
+    
+    local tween = TweenService:Create(AimbotIndicator, TweenInfo.new(0.3), {
+        BackgroundColor3 = state and ThemeColor or Color3.fromRGB(60, 60, 60)
+    })
+    tween:Play()
+    
+    if state then
+        local connection
+        connection = RunService.Heartbeat:Connect(function()
+            local character = LocalPlayer.Character
+            if character then
+                local target = nil
+                local closestDistance = math.huge
+                
+                for _, player in pairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer then
+                        local targetChar = player.Character
+                        if targetChar then
+                            local root = targetChar:FindFirstChild("HumanoidRootPart")
+                            if root then
+                                local myRoot = character:FindFirstChild("HumanoidRootPart")
+                                if myRoot then
+                                    local distance = (myRoot.Position - root.Position).Magnitude
+                                    if distance < closestDistance and distance < 500 then
+                                        closestDistance = distance
+                                        target = root
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+                
+                if target then
+                    local myRoot = character:FindFirstChild("HumanoidRootPart")
+                    if myRoot then
+                        myRoot.CFrame = CFrame.new(myRoot.Position, target.Position)
+                    end
+                end
+            end
+        end)
+        
+        AimbotButton:GetPropertyChangedSignal("Text"):Connect(function()
+            if AimbotButton.Text:find("OFF") then
+                connection:Disconnect()
+            end
+        end)
+    end
+end)
+
+local SaveLoadCategory = CreateCategoryButton("Save/Load")
+local SaveLoadContent = CreateSection(SaveLoadCategory, "KONFIGURASI")
+
+local SaveButton = CreateSimpleButton(SaveLoadContent, "Save Konfigurasi")
+SaveButton.MouseButton1Click:Connect(function()
+    local config = {}
+    
+    for _, category in pairs(ButtonContainer:GetChildren()) do
+        if category:IsA("TextButton") then
+            local categoryName = category.Text
+            config[categoryName] = {}
+        end
+    end
+    
+    local json = HttpService:JSONEncode(config)
+    writefile("AkbarPanel_Config.json", json)
+    
+    SaveButton.Text = "✓ Tersimpan!"
+    task.wait(1)
+    SaveButton.Text = "Save Konfigurasi"
+end)
+
+local LoadButton = CreateSimpleButton(SaveLoadContent, "Load Konfigurasi")
+LoadButton.MouseButton1Click:Connect(function()
+    if isfile("AkbarPanel_Config.json") then
+        local success, config = pcall(function()
+            return HttpService:JSONDecode(readfile("AkbarPanel_Config.json"))
+        end)
+        
+        if success then
+            LoadButton.Text = "✓ Terload!"
+            task.wait(1)
+            LoadButton.Text = "Load Konfigurasi"
+        end
+    end
+end)
+
+local ResetButton = CreateSimpleButton(SaveLoadContent, "Reset Semua")
+ResetButton.MouseButton1Click:Connect(function()
+    for _, child in pairs(ButtonContainer:GetChildren()) do
+        if child:IsA("TextButton") then
+            child.MouseButton1Click:Fire()
+            break
+        end
+    end
+    
+    ResetButton.Text = "✓ Tereset!"
+    task.wait(1)
+    ResetButton.Text = "Reset Semua"
+end)
+
+local UIKeybindBox = CreateTextBox(SaveLoadContent, "UI Keybind", "RightControl", "Enum.KeyCode")
+
+local DestroyButton = CreateSimpleButton(SaveLoadContent, "Destroy UI")
+DestroyButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+task.spawn(function()
+    while true do
+        for _, button in pairs(ButtonContainer:GetChildren()) do
+            if button:IsA("TextButton") then
+                if button.BackgroundColor3 == ThemeColor then
+                    local pulse = TweenService:Create(button, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                        BackgroundTransparency = 0.2
+                    })
+                    pulse:Play()
+                    task.wait(0.5)
+                    local pulseBack = TweenService:Create(button, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                        BackgroundTransparency = 0
+                    })
+                    pulseBack:Play()
+                end
+            end
+        end
+        task.wait(2)
+    end
+end)
+
+local watermark = Instance.new("TextLabel")
+watermark.Text = " Charles" .. LocalPlayer.Name
+watermark.TextColor3 = ThemeColor
+watermark.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+watermark.TextStrokeTransparency = 0
+watermark.BackgroundTransparency = 1
+watermark.Position = UDim2.new(0, 10, 1, -25)
+watermark.Size = UDim2.new(0, 200, 0, 20)
+watermark.Font = Enum.Font.GothamSemibold
+watermark.TextSize = 12
+watermark.TextXAlignment = Enum.TextXAlignment.Left
+watermark.Parent = ScreenGui
+
+local fpsCounter = Instance.new("TextLabel")
+fpsCounter.Text = "FPS: 60"
+fpsCounter.TextColor3 = ThemeColor
+fpsCounter.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+fpsCounter.TextStrokeTransparency = 0
+fpsCounter.BackgroundTransparency = 1
+fpsCounter.Position = UDim2.new(1, -210, 1, -25)
+fpsCounter.Size = UDim2.new(0, 200, 0, 20)
+fpsCounter.Font = Enum.Font.GothamSemibold
+fpsCounter.TextSize = 12
+fpsCounter.TextXAlignment = Enum.TextXAlignment.Right
+fpsCounter.Parent = ScreenGui
+
+local frameCount = 0
+local lastTime = tick()
+
+RunService.Heartbeat:Connect(function()
+    frameCount = frameCount + 1
+    local currentTime = tick()
+    
+    if currentTime - lastTime >= 1 then
+        fpsCounter.Text = "FPS: " .. frameCount
+        frameCount = 0
+        lastTime = currentTime
+    end
+end)
+
+print("CharlesHub loaded successfully!")
+print("Press RightControl to toggle UI")
+print("Created by: Charles16")
